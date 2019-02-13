@@ -40,6 +40,7 @@ class Tiler(object):
 
         self.masterarea = self.currentLayout.maxSize // 2
         self.masterareaCount = 1
+        self.LayoutBeforeTogglingFullscreen = None
 
         self.windows = []
 
@@ -48,7 +49,7 @@ class Tiler(object):
         #rectangle
         #(left, top, right, bottom)
         config = pwt.config.config
-        
+
         self.left = workarea[0] + config.getint("global", "left_margin")
         self.top = workarea[1] + config.getint("global", "top_margin")
 
@@ -95,7 +96,7 @@ class Tiler(object):
 
         window.undecorate()
         window.update()
-        
+
         self.add_window(window)
 
     def float_window(self, window):
@@ -107,7 +108,7 @@ class Tiler(object):
 
         window.decorate()
         window.update()
-        
+
         self.remove_window(window)
 
     def decrease_master_size(self):
@@ -146,7 +147,7 @@ class Tiler(object):
         window = Utility.next_item(self.windows, Window.focused_window())
 
         if window:            
-            
+
             if not window.focus():
 
                 self.remove_window(window)
@@ -189,7 +190,7 @@ class Tiler(object):
         """
         Switches the window to the next position
         """
-        
+
         #get focused window
         window = Window.focused_window()
 
@@ -463,3 +464,12 @@ class Tiler(object):
 
                 window.decorate()
                 window.update()
+
+    def toggle_fullscreen(self):
+        if not self.LayoutBeforeTogglingFullscreen:
+            self.LayoutBeforeTogglingFullscreen = self.currentLayout
+            self.fullscreen_tile();
+        else:
+            self.currentLayout = self.LayoutBeforeTogglingFullscreen
+            self.tile_windows()
+            self.LayoutBeforeTogglingFullscreen = None

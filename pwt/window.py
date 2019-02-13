@@ -6,22 +6,22 @@ import win32api
 
 import pwt.config
 
-from win32con import SWP_FRAMECHANGED 
-from win32con import SWP_NOMOVE 
-from win32con import SWP_NOSIZE 
+from win32con import SWP_FRAMECHANGED
+from win32con import SWP_NOMOVE
+from win32con import SWP_NOSIZE
 from win32con import SWP_NOZORDER
 from win32con import SW_HIDE
 from win32con import SW_FORCEMINIMIZE
 from win32con import SW_SHOWNORMAL
 
-from win32con import GW_OWNER 
-from win32con import GWL_STYLE 
-from win32con import GWL_EXSTYLE 
+from win32con import GW_OWNER
+from win32con import GWL_STYLE
+from win32con import GWL_EXSTYLE
 
-from win32con import WM_CLOSE 
+from win32con import WM_CLOSE
 
-from win32con import WS_CAPTION 
-from win32con import WS_EX_APPWINDOW 
+from win32con import WS_CAPTION
+from win32con import WS_EX_APPWINDOW
 from win32con import WS_EX_CONTROLPARENT
 from win32con import WS_EX_TOOLWINDOW
 from win32con import WS_EX_WINDOWEDGE
@@ -33,7 +33,7 @@ class Window(object):
         self.hotkeys = []
 
         self.hWindow = hWindow
-        
+
         config = pwt.config.config
 
         self.floating = self.classname in config["window"]["float"].split(";")
@@ -47,6 +47,12 @@ class Window(object):
 
         return hash(self.hWindow)
 
+    def __str__(self):
+        class_name_result = self.classname
+        if not class_name_result:
+            return "[UNKNOWN]"
+        return "["+ class_name_result+"] "+self.windowtext+" "+str(self.windowrectangle)
+
     def validate(self):
         """
         Control some properties of the window to see
@@ -57,7 +63,7 @@ class Window(object):
 
             value = win32gui.GetWindowLong(self.hWindow, GWL_EXSTYLE)
             owner = win32gui.GetWindow(self.hWindow, GW_OWNER)
-            
+
             if not win32gui.GetParent(self.hWindow):
 
                 if (not owner and not value & WS_EX_TOOLWINDOW) or value & WS_EX_APPWINDOW:
@@ -89,7 +95,7 @@ class Window(object):
                 return True
 
             else:
-            
+
                 return False
 
         except win32gui.error:
@@ -111,7 +117,7 @@ class Window(object):
 
                 style = win32gui.GetWindowLong(self.hWindow, GWL_STYLE)
 
-                style -= WS_CAPTION 
+                style -= WS_CAPTION
 
                 win32gui.SetWindowLong(self.hWindow, GWL_STYLE, style)
 
@@ -180,7 +186,7 @@ class Window(object):
                     ,position[2] - position[0]
                     ,position[3] - position[1]
                     ,True
-            )
+                    )
 
             return True
 
@@ -313,7 +319,7 @@ class Window(object):
                     ,0
                     ,0
                     ,SWP_FRAMECHANGED + SWP_NOMOVE + SWP_NOSIZE + SWP_NOZORDER
-            )
+                    )
 
             return True
 
@@ -330,7 +336,7 @@ class Window(object):
         Returns False on error
         """
 
-        try: 
+        try:
 
             rect = self.windowrectangle
 
@@ -411,7 +417,7 @@ class Window(object):
         Returns the window's bounding rectangle
         """
 
-        try: 
+        try:
 
             return win32gui.GetWindowRect(self.hWindow)
 
@@ -421,6 +427,22 @@ class Window(object):
             logging.exception("Error while getting the window coordinates")
 
             return False
+
+    @property
+    def windowtext(self):
+        """
+        Returns the window's title
+        """
+
+        try:
+
+            return win32gui.GetWindowText(self.hWindow)
+
+        except win32gui.error:
+
+            logging.exception("Error while getting window's title")
+
+            return None
 
     @property
     def classname(self):
@@ -434,7 +456,7 @@ class Window(object):
 
         except win32gui.error:
 
-            logging.exception("Error while getting window's class name")
+            # logging.exception("Error while getting window's class name")
 
             return None
 
@@ -472,7 +494,7 @@ class Window(object):
 
             return None
 
-      
+
     @staticmethod
     def focused_window():
         """

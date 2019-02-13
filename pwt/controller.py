@@ -1,4 +1,6 @@
 #@PydevCodeAnalysisIgnore
+import logging
+
 from pwt.notifyicon     import NotifyIcon
 from pwt.hotkey         import Hotkey
 from pwt.monitor        import Monitor
@@ -69,7 +71,7 @@ class Controller(object):
     @property
     def current_tiler(self):
         "Returns the current tiler"
-        
+
         return Monitor.current_monitor_from_list(self.monitors).tilers[self.group]
 
     @property
@@ -95,6 +97,11 @@ class Controller(object):
             monitor.tilers[self.group].windows = Window.valid_windows_from_monitor(monitor)
             monitor.tilers[self.group].tile_windows()
 
+        for i, monitor in enumerate(self.monitors):
+            logging.info("@ Monitor "+ str(i)+ (" (main)" if monitor.is_main() else ""))
+            for j, window in enumerate(monitor.tilers[self.group].windows):
+                logging.info("  "+str(window))
+
         try:
 
             #message priming read
@@ -110,17 +117,23 @@ class Controller(object):
 
                 #if lparam is an add event
                 elif message[1][2] in self.ADD_EVENTS:
-                    
+
                     window = Window(message[1][3])
 
                     if window not in self.current_group_windows:
-                        
+                        if window.classname:
+
+                            logging.info("Adding "+ str(window))
+
                         self.current_tiler.add_window(window)
-                    
+
                 #if lparam is a remove event
                 elif message[1][2] in self.REMOVE_EVENTS:
+                    window = Window(message[1][3])
+                    if window.classname:
+                        logging.info("Removing "+str(window))
 
-                    self.handle_remove_event(Window(message[1][3])
+                    self.handle_remove_event(window
                             , Monitor.monitor_from_point_in_list(self.monitors, message[1][5]))
 
                 if self.stop:
@@ -171,13 +184,13 @@ class Controller(object):
 
     def switch_group(self, i):
         "Switch the current group into group i"
-        
+
         for monitor in self.monitors:
 
             for window in monitor.tilers[self.group].windows:
 
                 window.hide()
-            
+
             for window in monitor.tilers[i].windows:
 
                 window.show()
@@ -261,55 +274,55 @@ class Controller(object):
         Window.focused_window().close()
 
     def cmd_switch_to_group_1(self):
-        
+
         if self.group != 0:
 
             self.switch_group(0)
 
     def cmd_switch_to_group_2(self):
-        
+
         if self.group != 1:
 
             self.switch_group(1)
 
     def cmd_switch_to_group_3(self):
-        
+
         if self.group != 2:
 
             self.switch_group(2)
 
     def cmd_switch_to_group_4(self):
-        
+
         if self.group != 3:
 
             self.switch_group(3)
 
     def cmd_switch_to_group_5(self):
-        
+
         if self.group != 4:
 
             self.switch_group(4)
 
     def cmd_switch_to_group_6(self):
-        
+
         if self.group != 5:
 
             self.switch_group(5)
 
     def cmd_switch_to_group_7(self):
-        
+
         if self.group != 6:
 
             self.switch_group(6)
 
     def cmd_switch_to_group_8(self):
-        
+
         if self.group != 7:
 
             self.switch_group(7)
 
     def cmd_switch_to_group_9(self):
-        
+
         if self.group != 8:
 
             self.switch_group(8)
@@ -442,7 +455,7 @@ class Controller(object):
             nextMonitor = Utility.next_item(self.monitors, monitor)
 
             if nextMonitor:
-                
+
                 tiler = monitor.tilers[self.group]
                 nextTiler = nextMonitor.tilers[self.group]
 
@@ -466,7 +479,7 @@ class Controller(object):
             previousMonitor = Utility.previous_item(self.monitors, monitor)
 
             if previousMonitor:
-                
+
                 tiler = monitor.tilers[self.group]
                 previousTiler = previousMonitor.tilers[self.group]
 
@@ -488,16 +501,20 @@ class Controller(object):
                 , "LAYOUT"
         )
 
+    def cmd_toggle_fullscreen_layout(self):
+        self.current_tiler.toggle_fullscreen()
+
+
     def cmd_toggle_focused_window_decoration(self):
 
         Window.focused_window().toggle_decoration()
 
     def cmd_stop_pythonwindowstiler(self):
-        
+
         self.stop = True
 
     def cmd_toggle_taskbar_visibility(self):
-        
+
         self.taskbar.toggle_visibility()
 
         curmonitor = Monitor.current_monitor_from_list(self.monitors)
@@ -521,29 +538,29 @@ class Controller(object):
     def cmd_float_focused_window(self):
 
         self.current_tiler.float_window(Window.focused_window())
-        
+
     def add_hotkeys_to_notifyicon(self):
-        
+
         config = pwt.config.config
-        
+
         for i, func in enumerate(config["hotkey"]):
-            
+
             keycombos = config["hotkey"][func].split("+")
-            
+
             mods = sum([keys[x] for x in keycombos[:-1]])
-            
+
             try: 
-                
+
                 vk = keys[keycombos[-1]]
-                
+
             except KeyError:
-                
+
                 vk = ord(keycombos[-1].upper())
-                
+
             self.notifyicon.hotkeys.append(Hotkey(
                     i+1
                     , mods
                     , vk
                     , getattr(self, "cmd_" + func)
             ))
-        
+
